@@ -28,6 +28,27 @@ def create_dataset(source_dir) -> pd.DataFrame:
     return merged_df
 
 
+def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:
+    columns = ['propertyCode', 'floor', 'price', 'size', 'rooms', 'bathrooms', 'address', 'province', 'municipality',
+               'district', 'latitude', 'longitude', 'showAddress', 'url', 'distance', 'description', 'status',
+               'newDevelopment', 'hasLift', 'priceByArea', 'detailedType', 'hasPlan', 'hasStaging', 'topNewDevelopment',
+               'topPlus', 'externalReference', 'isAuction', 'parkingSpace', 'labels', 'highlight',
+               'newDevelopmentFinished']
+    df = df[columns]  # keep only specified columns
+
+    # cast to int
+    df = df.astype({'price': 'int', 'size': 'int', 'priceByArea': 'int'})
+
+    # remove auction ads
+    df = df[df['isAuction'].isna()]
+    df = df.drop(columns=['isAuction'])
+
+    # convert floors to numbers
+    df['floor'] = df['floor'].replace('ss', -1).replace('bj', 0).replace('en', 0.5)
+
+    return df
+
+
 def export_dataset(df, output_dir):
     # export df for backup purposes
     output_filename = os.path.join(output_dir, f'df_total_{int(time.time())}.csv')
@@ -83,7 +104,7 @@ def define_search_url(country: str) -> str:
     return search_url
 
 
-def get_results(url, params):
+def get_results(url, params) -> dict:
     token = get_oauth_token(IDEALISTA_API_KEY, IDEALISTA_SECRET)
     headers_dict = {"Authorization": 'Bearer ' + token,
                     "Content-Type": "application/x-www-form-urlencoded"
@@ -123,6 +144,9 @@ def main(input_filepath, output_filepath):
 
     logger.info('Creating dataset...')
     df = create_dataset(input_filepath)
+
+    logger.info('Cleaning dataset...')
+    df = clean_dataset(df)
 
     logger.info(f'Exporting dataset to {output_filepath}')
     export_dataset(df, output_filepath)
