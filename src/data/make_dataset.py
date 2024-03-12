@@ -30,10 +30,7 @@ class Datasource:
         self.config_filepath = config_filepath
         self.data_dir = data_dir
         self.df = None
-
-    @property
-    def filtered_params(self):
-        return self.parse_filter_params(
+        self.filtered_params = self.parse_filter_params(
             params_dict=self.read_toml_config(file_path=self.config_filepath))
 
     @property
@@ -140,7 +137,7 @@ class Idealista(Datasource):
                 elements.extend(result["elementList"])
 
             result["elementList"] = elements  # update dictionary with cumulative results
-            self.logger.info(f"Stored {len(elements)} items over a total of {result['total']} available")
+            self.logger.info(f"Got {len(elements)} items over a total of {result['total']} available")
 
         except requests.exceptions.RequestException as e:
             self.logger.error(f"Connection error: '{str(e)}'")
@@ -165,7 +162,7 @@ class Idealista(Datasource):
                 dfs.append(pd.DataFrame.from_dict(elements_dict))
         self.df = pd.concat(dfs)
         # removing duplicates based on propertyCode
-        self.df.drop_duplicates(subset=['propertyCode'], keep='first')
+        self.df = self.df.drop_duplicates(subset=['propertyCode'], keep='first')
 
     def clean_dataset(self):
         columns = ['propertyCode', 'floor', 'price', 'size', 'rooms', 'bathrooms', 'address', 'province',
