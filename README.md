@@ -8,7 +8,7 @@ The project is developed entirely using Python and follows object-oriented progr
 
 ## Who is this for?
 This tool is intended for:
-- Developers interested in real estate data extraction and analysis.
+- Data scientists interested in real estate data extraction and analysis.
 - Real estate agents/companies looking to integrate listing data into their systems.
 - Anyone curious about exploring the world of real estate through data.
 

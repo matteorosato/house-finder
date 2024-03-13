@@ -161,16 +161,20 @@ class Idealista(Datasource):
                 elements_dict = json.load(f)['elementList']
                 dfs.append(pd.DataFrame.from_dict(elements_dict))
         self.df = pd.concat(dfs)
-        # removing duplicates based on propertyCode
-        self.df = self.df.drop_duplicates(subset=['propertyCode'], keep='first')
 
     def clean_dataset(self):
+        # removing duplicates based on propertyCode
+        duplicates = self.df.duplicated(subset=['propertyCode'], keep='first')
+        self.logger.debug(f'Found {sum(duplicates.values)} duplicates. Removing them...')
+        self.df = self.df[~duplicates.values]
+
+        # keep only specified columns
         columns = ['propertyCode', 'floor', 'price', 'size', 'rooms', 'bathrooms', 'address', 'province',
                    'municipality', 'district', 'latitude', 'longitude', 'showAddress', 'url', 'distance', 'description',
                    'status', 'newDevelopment', 'hasLift', 'priceByArea', 'detailedType', 'hasPlan', 'hasStaging',
                    'topNewDevelopment', 'topPlus', 'externalReference', 'isAuction', 'parkingSpace', 'labels',
                    'highlight', 'newDevelopmentFinished']
-        self.df = self.df[columns]  # keep only specified columns
+        self.df = self.df[columns]
 
         # cast to int
         self.df = self.df.astype({'price': 'int', 'size': 'int', 'priceByArea': 'int'})
