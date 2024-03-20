@@ -9,9 +9,11 @@ import pandas as pd
 import requests
 import toml
 from dotenv import find_dotenv, load_dotenv
+from sklearn.model_selection import train_test_split
 
-RAW = 'raw'  # name of the folder for raw data
-PROCESSED = 'processed'  # name of the folder for processed data
+PROJECT_DIR = pathlib.Path(__file__).resolve().parents[2]
+RAW_DIR = PROJECT_DIR.joinpath("data/raw")  # name of the folder for raw data
+PROCESSED_DIR = PROJECT_DIR.joinpath("data/processed")  # name of the folder for processed data
 MAX_PAGES = 2  # limit of the ads pages to be requested
 
 # find .env automagically by walking up directories until it's found, then
@@ -23,15 +25,15 @@ class Datasource:
     api_key = None
     secret = None
 
-    logger = logging.getLogger(__name__)
-
-    def __init__(self, name: str, config_filepath: str, data_dir: str):
+    def __init__(self, name: str, config_filepath: str):
         self.name = name
         self.config_filepath = config_filepath
-        self.data_dir = data_dir
-        self.df = None
         self.filtered_params = self.parse_filter_params(
             params_dict=self.read_toml_config(file_path=self.config_filepath))
+
+    @property
+    def logger(self):
+        return logging.getLogger(f'{__name__}.{self.__class__.__name__}')
 
     @property
     def search_url(self):
@@ -60,7 +62,7 @@ class Datasource:
 
     def export_results(self, results: dict):
         # export results from query
-        output_filename = os.path.join(self.data_dir, RAW, f'dump_{int(time.time())}.json')
+        output_filename = RAW_DIR.joinpath(f'dump_{int(time.time())}.json')
         self.logger.info(f'Exporting data to {output_filename}')
         with open(output_filename, 'w') as f:
             f.write(json.dumps(results, indent=4))
@@ -71,21 +73,16 @@ class Datasource:
     def define_search_url(self) -> str:
         pass
 
-    def clean_dataset(self):
+    def clean_dataset(self, df) -> pd.DataFrame:
         pass
-
-    def export_dataset(self):
-        # export df for backup purposes
-        output_filename = os.path.join(self.data_dir, PROCESSED, f'df_total_{int(time.time())}.csv')
-        self.df.to_csv(output_filename)
 
 
 class Idealista(Datasource):
     api_key: str = os.environ['IDEALISTA_API_KEY']
     secret: str = os.environ['IDEALISTA_SECRET']
 
-    def __init__(self, name: str, config_filepath: str, data_dir: str):
-        super().__init__(name, config_filepath, data_dir)
+    def __init__(self, name: str, config_filepath: str):
+        super().__init__(name, config_filepath)
 
     def define_search_url(self) -> str:
         country = self.filtered_params['country']
@@ -123,8 +120,7 @@ class Idealista(Datasource):
     def get_results(self) -> dict:
         token = self.get_oauth_token()
         headers_dict = {"Authorization": 'Bearer ' + token,
-                        "Content-Type": "application/x-www-form-urlencoded"
-                        }
+                        "Content-Type": "application/x-www-form-urlencoded"}
         try:
             elements = []
             result = self.search(headers_dict)  # get results for the first page
@@ -151,8 +147,8 @@ class Idealista(Datasource):
         result = r.json()
         return result
 
-    def create_dataset(self):
-        source_dir = os.path.join(self.data_dir, RAW)
+    def create_dataset(self) -> pd.DataFrame:
+        source_dir = RAW_DIR
         json_files = [f for f in pathlib.Path(source_dir).glob("*.json")]
         json_files.reverse()  # put files in descending order
         dfs = []
@@ -160,54 +156,96 @@ class Idealista(Datasource):
             with open(file, 'r') as f:
                 elements_dict = json.load(f)['elementList']
                 dfs.append(pd.DataFrame.from_dict(elements_dict))
-        self.df = pd.concat(dfs)
+        df = pd.concat(dfs)
+        return df
 
-    def clean_dataset(self):
+    def clean_dataset(self, df) -> pd.DataFrame:
+
         # removing duplicates based on propertyCode
-        duplicates = self.df.duplicated(subset=['propertyCode'], keep='first')
-        self.logger.debug(f'Found {sum(duplicates.values)} duplicates. Removing them...')
-        self.df = self.df[~duplicates.values]
+        duplicates = df.duplicated(subset=['propertyCode'], keep='first')
+        self.logger.info(f'Found {sum(duplicates.values)} duplicates. Removing them...')
+        df = df[~duplicates.values]
 
         # keep only specified columns
-        columns = ['propertyCode', 'floor', 'price', 'size', 'rooms', 'bathrooms', 'address', 'province',
-                   'municipality', 'district', 'latitude', 'longitude', 'showAddress', 'url', 'distance', 'description',
-                   'status', 'newDevelopment', 'hasLift', 'priceByArea', 'detailedType', 'hasPlan', 'hasStaging',
-                   'topNewDevelopment', 'topPlus', 'externalReference', 'isAuction', 'parkingSpace', 'labels',
-                   'highlight', 'newDevelopmentFinished']
-        self.df = self.df[columns]
+        columns = ['floor', 'size', 'rooms', 'bathrooms', 'municipality', 'district', 'status', 'hasLift',
+                   'priceByArea', 'parkingSpace', 'price', 'isAuction', 'propertyCode']
+        df = df[columns]
 
-        # cast to int
-        self.df = self.df.astype({'price': 'int', 'size': 'int', 'priceByArea': 'int'})
+        # fill missing district by setting it equal to municipality
+        df.fillna({'district': df['municipality']}, inplace=True)
 
         # remove auction ads
-        self.df = self.df[self.df['isAuction'].isna()]
-        self.df = self.df.drop(columns=['isAuction'])
+        df = df[df['isAuction'].isna()]
+        df = df.drop(columns=['isAuction'])
 
-        # convert floors to numbers
-        self.df['floor'] = self.df['floor'].replace('ss', -1).replace('bj', 0).replace('en', 0.5)
+        # extract info for parking space
+        def has_parking_space(x):
+            if isinstance(x, dict) and x['hasParkingSpace'] and x['isParkingSpaceIncludedInPrice']:
+                # keep only the ads with park included in the final price
+                return True
+            else:
+                return False
+
+        df['parkingSpace'] = df['parkingSpace'].apply(has_parking_space)
+
+        # fill nan
+        df.fillna({'hasLift': False}, inplace=True)
+
+        # cast to int
+        cols_to_int = ['price', 'size', 'priceByArea']
+        for col in cols_to_int:
+            df[col] = df[col].astype('int')
+
+        # convert to categories
+        cols_to_categories = ['floor', 'municipality', 'district', 'status']
+        for col in cols_to_categories:
+            df[col] = df[col].astype('category')
+
+        # apply One Hot Encoding to categories
+        df = pd.get_dummies(df, columns=cols_to_categories)
+
+        # checking features which have nan values
+        nan_values = df.isna().sum()
+        if nan_values.any():
+            self.logger.warning("There are still nan values in your dataset. Please check it")
+
+        # use 'propertyCode' as index
+        df.set_index('propertyCode', inplace=True)
+
+        return df
+
+    @staticmethod
+    def create_train_test_df(df, test_size=0.2) -> tuple[pd.DataFrame, pd.DataFrame]:
+        # split the data into train and test set
+        df_train, df_test = train_test_split(df, test_size=test_size, random_state=11, shuffle=True)
+        return df_train, df_test
 
 
 def main():
-    """ Runs data processing scripts to turn raw data from (../raw) into
-        cleaned data ready to be analyzed (saved in ../processed).
-    """
+    logger = logging.getLogger(__name__)
 
-    idealista = Idealista(name='Idealista', config_filepath='config.toml', data_dir='data')
+    idealista = Idealista(name='Idealista', config_filepath='config.toml')
     logger.info(f'Getting results from {idealista.name} website')
     results = idealista.get_results()
     logger.info(f'Exporting results from {idealista.name} website')
     idealista.export_results(results)
     logger.info('Creating dataset...')
-    idealista.create_dataset()
+    df_raw = idealista.create_dataset()
+    logger.info('Exporting raw data...')
+    df_raw.to_csv(RAW_DIR.joinpath('raw_data.csv'))
     logger.info('Cleaning dataset...')
-    idealista.clean_dataset()
-    logger.info(f'Exporting dataset...')
-    idealista.export_dataset()
+    df_cleaned = idealista.clean_dataset(df_raw)
+    logger.info('Separating train and test datasets...')
+    df_train, df_test = idealista.create_train_test_df(df_cleaned)
+    logger.info('Exporting train data...')
+    df_train.to_csv(PROCESSED_DIR.joinpath('training_data.csv'))
+    logger.info('Exporting test data...')
+    df_test.to_csv(PROCESSED_DIR.joinpath('test_data.csv'))
+    logger.info('Done!')
 
 
 if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     logging.basicConfig(level=logging.INFO, format=log_fmt)
-    logger = logging.getLogger(__name__)
 
     main()
