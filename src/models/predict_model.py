@@ -3,7 +3,9 @@ import logging
 import os
 import pickle
 import time
+from pathlib import Path
 import pandas as pd
+from typing import Dict
 from sklearn.metrics import mean_absolute_percentage_error, mean_absolute_error, r2_score
 from sklearn.metrics import mean_squared_error
 from src.constants import PROCESSED_DIR, MODELS_DIR, RESULTS_DIR
@@ -11,29 +13,27 @@ from src.constants import PROCESSED_DIR, MODELS_DIR, RESULTS_DIR
 
 class Predictor:
 
-    def __init__(self, model_filepath):
+    def __init__(self, model_filepath: Path):
         self.model_filepath = model_filepath
         self.model_name = self.get_model_name(self.model_filepath)
         self.model = self.load_model(self.model_filepath)
 
     @property
-    def logger(self):
+    def logger(self) -> logging.Logger:
         return logging.getLogger(f'{__name__}.{self.__class__.__name__}')
 
     @staticmethod
-    def get_model_name(filepath):
-        filename = os.path.basename(filepath)
-        model_name = os.path.splitext(filename)[0]
-        return model_name
+    def get_model_name(filepath: Path) -> str:
+        return os.path.splitext(filepath.name)[0]
 
     @staticmethod
-    def load_model(model_filepath):
+    def load_model(model_filepath: Path):
         with open(model_filepath, 'rb') as f:
             model = pickle.load(f)
         return model
 
     @staticmethod
-    def evaluate_model(y_test, y_pred):
+    def evaluate_model(y_test: pd.Series, y_pred: pd.Series) -> Dict[str, float]:
         metrics = [r2_score, mean_absolute_percentage_error, mean_absolute_error, mean_squared_error]
         metric_results = dict()
         for metric in metrics:
@@ -41,7 +41,7 @@ class Predictor:
         return metric_results
 
     @staticmethod
-    def generate_report(cleaned_df, predictions_df) -> pd.DataFrame:
+    def generate_report(cleaned_df: pd.DataFrame, predictions_df: pd.DataFrame) -> pd.DataFrame:
         # keep only specified columns
         columns = ['municipality', 'address', 'size', 'url']
         df = cleaned_df[columns]
@@ -54,7 +54,7 @@ class Predictor:
 
         return df
 
-    def predict(self, test_df) -> pd.DataFrame:
+    def predict(self, test_df: pd.DataFrame) -> pd.DataFrame:
         price = test_df.pop('price')
         predicted_price = self.model.predict(test_df).astype(int)
         evaluation_dict = self.evaluate_model(y_test=price, y_pred=predicted_price)
