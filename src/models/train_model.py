@@ -1,17 +1,14 @@
 # -*- coding: utf-8 -*-
 import logging
 import pickle
-from pathlib import Path
 import pandas as pd
 from sklearn.metrics import mean_absolute_percentage_error, mean_absolute_error, r2_score
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.ensemble import RandomForestRegressor, ExtraTreesRegressor
 from sklearn.metrics import mean_squared_error
 from sklearn.neighbors import KNeighborsRegressor
+from src.constants import PROCESSED_DIR, MODELS_DIR
 
-PROJECT_DIR = Path(__file__).resolve().parents[2]
-PROCESSED_DIR = PROJECT_DIR.joinpath("data/processed")  # name of the folder for processed data
-MODELS_DIR = PROJECT_DIR.joinpath("models")  # name of the folder for models
 AVAILABLE_MODELS = {
     # sample models, may be extended in the future
     'RandomForest': RandomForestRegressor(n_estimators=100, criterion='mse'),

@@ -10,10 +10,8 @@ import requests
 import toml
 from dotenv import find_dotenv, load_dotenv
 from sklearn.model_selection import train_test_split
+from src.constants import RAW_DIR, PROCESSED_DIR
 
-PROJECT_DIR = pathlib.Path(__file__).resolve().parents[2]
-RAW_DIR = PROJECT_DIR.joinpath("data/raw")  # name of the folder for raw data
-PROCESSED_DIR = PROJECT_DIR.joinpath("data/processed")  # name of the folder for processed data
 MAX_PAGES = 2  # limit of the ads pages to be requested
 
 # find .env automagically by walking up directories until it's found, then
@@ -231,10 +229,10 @@ def main():
     logger = logging.getLogger(__name__)
 
     idealista = Idealista(name='Idealista', config_filepath='config.toml')
-    logger.info(f'Getting results from {idealista.name} website')
-    results = idealista.get_results()
-    logger.info(f'Exporting results from {idealista.name} website')
-    idealista.export_results(results)
+    # logger.info(f'Getting results from {idealista.name} website')
+    # results = idealista.get_results()
+    # logger.info(f'Exporting results from {idealista.name} website')
+    # idealista.export_results(results)
     logger.info('Creating dataset...')
     df_raw = idealista.create_dataset()
     logger.info('Cleaning dataset...')

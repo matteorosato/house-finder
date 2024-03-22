@@ -3,15 +3,10 @@ import logging
 import os
 import pickle
 import time
-from pathlib import Path
 import pandas as pd
 from sklearn.metrics import mean_absolute_percentage_error, mean_absolute_error, r2_score
 from sklearn.metrics import mean_squared_error
-
-PROJECT_DIR = Path(__file__).resolve().parents[2]
-RAW_DIR = PROJECT_DIR.joinpath("data/raw")  # name of the folder for raw data
-PROCESSED_DIR = PROJECT_DIR.joinpath("data/processed")  # name of the folder for processed data
-MODELS_DIR = PROJECT_DIR.joinpath("models")  # name of the folder for models
+from src.constants import PROJECT_DIR, PROCESSED_DIR, MODELS_DIR, RESULTS_DIR
 
 
 class Predictor:
@@ -86,7 +81,7 @@ def main():
     cleaned_df = pd.read_csv(cleaned_datapath, index_col='propertyCode')
     results_df = predictor.generate_report(cleaned_df, predictions_df)
 
-    output_filepath = PROJECT_DIR.joinpath(f'results/report_{int(time.time())}.csv')
+    output_filepath = RESULTS_DIR.joinpath(f'report_{int(time.time())}.csv')
     logger.info(f'Exporting final report to to {output_filepath}')
     results_df.to_csv(output_filepath)
     logger.info("Done!")
