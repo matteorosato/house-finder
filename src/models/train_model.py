@@ -5,16 +5,13 @@ import pandas as pd
 from typing import Tuple, Dict
 from sklearn.metrics import mean_absolute_percentage_error, mean_absolute_error, r2_score
 from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.ensemble import RandomForestRegressor, ExtraTreesRegressor
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
-from sklearn.neighbors import KNeighborsRegressor
 from src.constants import PROCESSED_DIR, MODELS_DIR
 
 AVAILABLE_MODELS = {
     # sample models, may be extended in the future
-    'RandomForest': RandomForestRegressor(n_estimators=100, criterion='mse'),
-    'ExtraTrees': ExtraTreesRegressor(n_estimators=100, criterion='mae'),
-    'Knn': KNeighborsRegressor(n_neighbors=5, weights='distance', metric='minkowski')
+    'RandomForest': RandomForestRegressor(n_estimators=100, criterion='mse')
 }
 
 
