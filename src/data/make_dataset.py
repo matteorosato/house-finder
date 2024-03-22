@@ -76,6 +76,12 @@ class Datasource:
     def clean_dataset(self, df) -> pd.DataFrame:
         pass
 
+    @staticmethod
+    def create_train_test_df(df, test_size=0.2) -> tuple[pd.DataFrame, pd.DataFrame]:
+        # split the data into train and test set
+        df_train, df_test = train_test_split(df, test_size=test_size, random_state=11, shuffle=True)
+        return df_train, df_test
+
 
 class Idealista(Datasource):
     api_key: str = os.environ['IDEALISTA_API_KEY']
@@ -167,8 +173,8 @@ class Idealista(Datasource):
         df = df[~duplicates.values]
 
         # keep only specified columns
-        columns = ['floor', 'size', 'rooms', 'bathrooms', 'municipality', 'district', 'status', 'hasLift',
-                   'priceByArea', 'parkingSpace', 'price', 'isAuction', 'propertyCode']
+        columns = ['floor', 'size', 'rooms', 'bathrooms', 'address', 'municipality', 'district', 'status', 'hasLift',
+                   'price', 'priceByArea', 'parkingSpace', 'isAuction', 'url', 'propertyCode']
         df = df[columns]
 
         # fill missing district by setting it equal to municipality
@@ -193,13 +199,22 @@ class Idealista(Datasource):
 
         # cast to int
         cols_to_int = ['price', 'size', 'priceByArea']
-        for col in cols_to_int:
-            df[col] = df[col].astype('int')
+        df[cols_to_int] = df[cols_to_int].astype('int')
+
+        # use 'propertyCode' as index
+        df.set_index('propertyCode', inplace=True)
+
+        return df
+
+    def build_features(self, df) -> pd.DataFrame:
+        # keep only specified columns (features)
+        features = ['floor', 'size', 'rooms', 'bathrooms', 'municipality', 'district', 'status', 'hasLift',
+                    'parkingSpace', 'price']
+        df = df[features]
 
         # convert to categories
         cols_to_categories = ['floor', 'municipality', 'district', 'status']
-        for col in cols_to_categories:
-            df[col] = df[col].astype('category')
+        df[cols_to_categories] = df[cols_to_categories].astype('category')
 
         # apply One Hot Encoding to categories
         df = pd.get_dummies(df, columns=cols_to_categories)
@@ -209,16 +224,7 @@ class Idealista(Datasource):
         if nan_values.any():
             self.logger.warning("There are still nan values in your dataset. Please check it")
 
-        # use 'propertyCode' as index
-        df.set_index('propertyCode', inplace=True)
-
         return df
-
-    @staticmethod
-    def create_train_test_df(df, test_size=0.2) -> tuple[pd.DataFrame, pd.DataFrame]:
-        # split the data into train and test set
-        df_train, df_test = train_test_split(df, test_size=test_size, random_state=11, shuffle=True)
-        return df_train, df_test
 
 
 def main():
@@ -231,12 +237,14 @@ def main():
     idealista.export_results(results)
     logger.info('Creating dataset...')
     df_raw = idealista.create_dataset()
-    logger.info('Exporting raw data...')
-    df_raw.to_csv(RAW_DIR.joinpath('raw_data.csv'))
     logger.info('Cleaning dataset...')
     df_cleaned = idealista.clean_dataset(df_raw)
+    logger.info('Exporting cleaned data...')
+    df_cleaned.to_csv(PROCESSED_DIR.joinpath('cleaned_data.csv'))
+    logger.info('Building features...')
+    df_processed = idealista.build_features(df_cleaned)
     logger.info('Separating train and test datasets...')
-    df_train, df_test = idealista.create_train_test_df(df_cleaned)
+    df_train, df_test = idealista.create_train_test_df(df_processed)
     logger.info('Exporting train data...')
     df_train.to_csv(PROCESSED_DIR.joinpath('training_data.csv'))
     logger.info('Exporting test data...')
