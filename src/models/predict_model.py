@@ -6,7 +6,7 @@ import time
 import pandas as pd
 from sklearn.metrics import mean_absolute_percentage_error, mean_absolute_error, r2_score
 from sklearn.metrics import mean_squared_error
-from src.constants import PROJECT_DIR, PROCESSED_DIR, MODELS_DIR, RESULTS_DIR
+from src.constants import PROCESSED_DIR, MODELS_DIR, RESULTS_DIR
 
 
 class Predictor:
@@ -50,19 +50,15 @@ class Predictor:
         predictions_df['price_diff'] = predictions_df['predicted_price'] - predictions_df['price']
 
         # add info about prices removing unneeded items (inner join)
-        df = df.join(predictions_df, how='inner').sort_values(by="price_diff", ascending=True)
+        df = df.join(predictions_df, how='inner').sort_values(by='price_diff', ascending=True)
 
         return df
 
     def predict(self, test_df) -> pd.DataFrame:
         price = test_df.pop('price')
-
-        self.logger.info(f"Run predictions...")
         predicted_price = self.model.predict(test_df).astype(int)
-
         evaluation_dict = self.evaluate_model(y_test=price, y_pred=predicted_price)
-        self.logger.info(f"Results on test data: {evaluation_dict}")
-
+        self.logger.info(f'Results on test data: {evaluation_dict}')
         predictions_df = pd.DataFrame({'price': price, 'predicted_price': predicted_price})
         return predictions_df
 
@@ -81,10 +77,10 @@ def main():
     cleaned_df = pd.read_csv(cleaned_datapath, index_col='propertyCode')
     results_df = predictor.generate_report(cleaned_df, predictions_df)
 
-    output_filepath = RESULTS_DIR.joinpath(f'report_{int(time.time())}.csv')
-    logger.info(f'Exporting final report to to {output_filepath}')
+    output_filepath = RESULTS_DIR.joinpath(f'results_{int(time.time())}.csv')
+    logger.info(f'Exporting final results to {output_filepath}')
     results_df.to_csv(output_filepath)
-    logger.info("Done!")
+    logger.info('Done!')
 
 
 if __name__ == "__main__":
