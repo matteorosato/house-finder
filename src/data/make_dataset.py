@@ -10,9 +10,8 @@ import requests
 import toml
 from dotenv import find_dotenv, load_dotenv
 from sklearn.model_selection import train_test_split
-from src.constants import RAW_DIR, PROCESSED_DIR
 
-MAX_PAGES = 2  # limit of the ads pages to be requested
+from src.constants import RAW_DIR, PROCESSED_DIR
 
 # find .env automagically by walking up directories until it's found, then
 # load up the .env entries as environment variables
@@ -23,9 +22,10 @@ class Datasource:
     api_key = None
     secret = None
 
-    def __init__(self, name: str, config_filepath: str):
+    def __init__(self, name: str, config_filepath: str, max_pages=2):
         self.name = name
         self.config_filepath = config_filepath
+        self.max_pages = max_pages  # limit of the ads pages to be requested
         self.filtered_params = self.parse_filter_params(
             params_dict=self.read_toml_config(file_path=self.config_filepath))
 
@@ -131,7 +131,7 @@ class Idealista(Datasource):
             self.logger.info(f"Available items: {result['total']} ({result['totalPages']} pages)")
             elements.extend(result["elementList"])
 
-            for i in range(2, min(MAX_PAGES, result["totalPages"]) + 1):
+            for i in range(2, min(self.max_pages, result["totalPages"]) + 1):
                 self.filtered_params["numPage"] = i
                 result = self.search(headers_dict)  # get results for the subsequent pages
                 elements.extend(result["elementList"])
@@ -229,10 +229,10 @@ def main():
     logger = logging.getLogger(__name__)
 
     idealista = Idealista(name='Idealista', config_filepath='config.toml')
-    # logger.info(f'Getting results from {idealista.name} website')
-    # results = idealista.get_results()
-    # logger.info(f'Exporting results from {idealista.name} website')
-    # idealista.export_results(results)
+    logger.info(f'Getting results from {idealista.name} website')
+    results = idealista.get_results()
+    logger.info(f'Exporting results from {idealista.name} website')
+    idealista.export_results(results)
     logger.info('Creating dataset...')
     df_raw = idealista.create_dataset()
     logger.info('Cleaning dataset...')
