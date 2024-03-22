@@ -5,6 +5,7 @@ import logging
 import os
 import pathlib
 import time
+from typing import Union, Dict, Any, Tuple
 import pandas as pd
 import requests
 import toml
@@ -22,7 +23,7 @@ class Datasource:
     api_key = None
     secret = None
 
-    def __init__(self, name: str, config_filepath: str, max_pages=2):
+    def __init__(self, name: str, config_filepath: Union[str, pathlib.Path], max_pages: int = 2):
         self.name = name
         self.config_filepath = config_filepath
         self.max_pages = max_pages  # limit of the ads pages to be requested
@@ -30,21 +31,21 @@ class Datasource:
             params_dict=self.read_toml_config(file_path=self.config_filepath))
 
     @property
-    def logger(self):
+    def logger(self) -> logging.Logger:
         return logging.getLogger(f'{__name__}.{self.__class__.__name__}')
 
     @property
-    def search_url(self):
+    def search_url(self) -> str:
         return self.define_search_url()
 
     @staticmethod
-    def read_toml_config(file_path: str) -> dict:
+    def read_toml_config(file_path: Union[str, pathlib.Path]) -> Dict[str, Any]:
         with open(file_path, 'r') as file:
             config_dict = toml.load(file)
         return config_dict
 
     @staticmethod
-    def parse_filter_params(params_dict: dict) -> dict:
+    def parse_filter_params(params_dict: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
         filtered_params = dict()
         for dictionary in params_dict.values():
             for k, v in dictionary.items():
@@ -75,8 +76,7 @@ class Datasource:
         pass
 
     @staticmethod
-    def create_train_test_df(df, test_size=0.2) -> tuple[pd.DataFrame, pd.DataFrame]:
-        # split the data into train and test set
+    def create_train_test_df(df: pd.DataFrame, test_size: float = 0.2) -> Tuple[pd.DataFrame, pd.DataFrame]:
         df_train, df_test = train_test_split(df, test_size=test_size, random_state=11, shuffle=True)
         return df_train, df_test
 
@@ -229,10 +229,10 @@ def main():
     logger = logging.getLogger(__name__)
 
     idealista = Idealista(name='Idealista', config_filepath='config.toml')
-    logger.info(f'Getting results from {idealista.name} website')
-    results = idealista.get_results()
-    logger.info(f'Exporting results from {idealista.name} website')
-    idealista.export_results(results)
+    # logger.info(f'Getting results from {idealista.name} website')
+    # results = idealista.get_results()
+    # logger.info(f'Exporting results from {idealista.name} website')
+    # idealista.export_results(results)
     logger.info('Creating dataset...')
     df_raw = idealista.create_dataset()
     logger.info('Cleaning dataset...')
