@@ -1,15 +1,19 @@
-Property finder
+House finder
 ==============================
 
-This project is dedicated to retrieving and analyzing property advertisements from real estate websites. It provides a 
+This project is dedicated to retrieving and analyzing house advertisements from real estate websites. It provides a 
 convenient way to gather information for analysis, research, or any other purposes related to the real estate domain.
+Below are the main steps:
+
+1. **Data Collection**: Collects data from real estate websites using their APIs.
+2. **Data Analysis**: Analyzes the collected data using Pandas and Machine Learning (ML) algorithms.
+3. **Report Generation**: Generates a report summarizing the findings from the analysis.
 
 The project is developed entirely using Python and follows object-oriented programming (OOP) practices. The initial template is provided by [Cookiecutter Data Science](https://drivendata.github.io/cookiecutter-data-science/).
 
 ## Who is this for?
-This tool is intended for:
 - Data scientists interested in real estate data extraction and analysis.
-- Real estate agents/companies looking to integrate listing data into their systems.
+- Real estate companies looking to integrate listing data into their systems.
 - Anyone curious about exploring the world of real estate through data.
 
 ## Fair Use Disclaimer
@@ -21,12 +25,12 @@ To use the tool, follow these steps:
 1. Ensure you have Python 3.10 and pip installed on your system.
 2. Clone the repository to your local machine:
    ```shell
-   git clone https://github.com/matteorosato/property-finder.git
+   git clone https://github.com/matteorosato/house-finder.git
    ```
 
 3. Navigate to the project directory:
    ```
-   cd property-finder
+   cd house-finder
    ```
 
 4. Create a virtual environment for the project:
@@ -52,9 +56,16 @@ To use the tool, follow these steps:
 
 8. Fill the `config.toml` file according to your preferences and needs.
 
-9. Run the tool:
+9. Run the tool (select one or more steps accordingly):
    ```
-   TODO
+   # Download the data and create the dataset
+   python src/data/make_dataset.py
+
+   # Train the model
+   python src/models/train_model.py
+   
+   # Make predictions
+   python src/models/predict_model.py
    ```
 
 ## Supported websites

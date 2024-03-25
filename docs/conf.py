@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Property finder documentation build configuration file, created by
+# House finder documentation build configuration file, created by
 # sphinx-quickstart.
 #
 # This file is execfile()d with the current directory set to its containing dir.
@@ -41,7 +41,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Property finder'
+project = u'House finder'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -164,7 +164,7 @@ html_static_path = ['_static']
 # html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'property-finderdoc'
+htmlhelp_basename = 'house-finderdoc'
 
 
 # -- Options for LaTeX output --------------------------------------------------
@@ -184,8 +184,8 @@ latex_elements = {
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
     ('index',
-     'property-finder.tex',
-     u'Property finder Documentation',
+     'house-finder.tex',
+     u'House finder Documentation',
      u"Matteo Rosato", 'manual'),
 ]
 
@@ -215,7 +215,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'property-finder', u'Property finder Documentation',
+    ('index', 'house-finder', u'House finder Documentation',
      [u"Matteo Rosato"], 1)
 ]
 
@@ -229,9 +229,9 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    ('index', 'property-finder', u'Property finder Documentation',
-     u"Matteo Rosato", 'Property finder',
-     'This project is dedicated to retrieving and analyzing property advertisements from real estate websites.', 'Miscellaneous'),
+    ('index', 'house-finder', u'House finder Documentation',
+     u"Matteo Rosato", 'House finder',
+     'Project for retrieving and analyzing house ads from real estate websites.', 'Miscellaneous'),
 ]
 
 # Documents to append as an appendix to all manuals.
