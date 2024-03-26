@@ -11,7 +11,7 @@ from src.constants import PROCESSED_DIR, MODELS_DIR
 
 AVAILABLE_MODELS = {
     # sample models, may be extended in the future
-    'RandomForest': RandomForestRegressor(n_estimators=100, criterion='mse')
+    'RandomForest': RandomForestRegressor(n_estimators=100, criterion='friedman_mse')
 }
 
 
@@ -37,7 +37,8 @@ class ModelTrainer:
     def fit_model(self, X: pd.DataFrame, y: pd.Series):
         self.model.fit(X, y)
 
-    def evaluate_model(self, X_train: pd.DataFrame, X_test: pd.DataFrame, y_train: pd.Series, y_test: pd.Series) -> Dict[str, float]:
+    def evaluate_model(self, X_train: pd.DataFrame, X_test: pd.DataFrame, y_train: pd.Series, y_test: pd.Series) -> \
+            Dict[str, float]:
         y_pred = self.model.predict(X_test).astype(int)
         score = self.model.score(X_train, y_train)
         self.logger.info(f'R2 score on training data: {round(score, 2)}')
@@ -67,6 +68,9 @@ class ModelTrainer:
 
 
 def main():
+    log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    logging.basicConfig(level=logging.INFO, format=log_fmt)
+    logger = logging.getLogger(__name__)
     my_model = ModelTrainer(model_name='RandomForest', target_name='price')
     logger.info('Loading training data...')
     training_datapath = PROCESSED_DIR.joinpath('training_data.csv')
@@ -79,8 +83,4 @@ def main():
 
 
 if __name__ == '__main__':
-    log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    logging.basicConfig(level=logging.INFO, format=log_fmt)
-    logger = logging.getLogger(__name__)
-
     main()

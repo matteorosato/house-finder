@@ -64,6 +64,10 @@ class Predictor:
 
 
 def main():
+    log_fmt = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    logging.basicConfig(level=logging.INFO, format=log_fmt)
+    logger = logging.getLogger(__name__)
+
     model_filepath = MODELS_DIR.joinpath('RandomForest' + '.pkl')
     predictor = Predictor(model_filepath=model_filepath)
 
@@ -84,8 +88,4 @@ def main():
 
 
 if __name__ == "__main__":
-    log_fmt = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    logging.basicConfig(level=logging.INFO, format=log_fmt)
-    logger = logging.getLogger(__name__)
-
     main()

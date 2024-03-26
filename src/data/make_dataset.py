@@ -12,7 +12,7 @@ import toml
 from dotenv import find_dotenv, load_dotenv
 from sklearn.model_selection import train_test_split
 
-from src.constants import RAW_DIR, PROCESSED_DIR
+from src.constants import RAW_DIR, PROCESSED_DIR, PROJECT_DIR
 
 # find .env automagically by walking up directories until it's found, then
 # load up the .env entries as environment variables
@@ -226,13 +226,15 @@ class Idealista(Datasource):
 
 
 def main():
+    log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    logging.basicConfig(level=logging.INFO, format=log_fmt)
     logger = logging.getLogger(__name__)
 
-    idealista = Idealista(name='Idealista', config_filepath='config.toml')
-    # logger.info(f'Getting results from {idealista.name} website')
-    # results = idealista.get_results()
-    # logger.info(f'Exporting results from {idealista.name} website')
-    # idealista.export_results(results)
+    idealista = Idealista(name='Idealista', config_filepath=PROJECT_DIR.joinpath('config.toml'))
+    logger.info(f'Getting results from {idealista.name} website')
+    results = idealista.get_results()
+    logger.info(f'Exporting results from {idealista.name} website')
+    idealista.export_results(results)
     logger.info('Creating dataset...')
     df_raw = idealista.create_dataset()
     logger.info('Cleaning dataset...')
@@ -251,7 +253,4 @@ def main():
 
 
 if __name__ == '__main__':
-    log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    logging.basicConfig(level=logging.INFO, format=log_fmt)
-
     main()

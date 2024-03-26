@@ -22,7 +22,7 @@ Note that this code is provided free of charge as is. For any bugs, see the issu
 ## Setup and Use
 To use the tool, follow these steps:
 
-1. Ensure you have Python 3.9 and pip installed on your system.
+1. Ensure you have Python 3.10 and pip installed on your system.
 2. Clone the repository to your local machine:
    ```shell
    git clone https://github.com/matteorosato/house-finder.git
@@ -33,39 +33,43 @@ To use the tool, follow these steps:
    cd house-finder
    ```
 
-4. Create a virtual environment for the project:
-   ```
-   python -m venv venv
-   ```
-
-5. Activate the virtual environment:
+4. [Create a virtual environment](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/#create-a-new-virtual-environment) for the project:
    - On Windows:
      ```
-     venv\Scripts\activate
+     py -m venv .venv
      ```
    - On macOS and Linux:
      ```
-     source venv/bin/activate
+     python3 -m venv .venv
      ```
 
-6. Install the required dependencies by running:
-   ```
-   pip install -r requirements.txt
-   ```
+5. [Activate the virtual environment](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/#activate-a-virtual-environment):
+   - On Windows:
+     ```
+     .venv\Scripts\activate
+     ```
+   - On macOS and Linux:
+     ```
+     source .venv/bin/activate
+     ```
+
+6. Install the [required dependencies](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/#using-a-requirements-file) by running:
+   - On Windows:
+     ```
+     py -m pip install -r requirements.txt
+     ```
+   - On macOS and Linux:
+     ```
+     python3 -m pip install -r requirements.txt
+     ```
 7. Fill the `.env` file with the required environment variables. Use the `.env.example` file as reference.
 
 8. Fill the `config.toml` file according to your preferences and needs.
 
-9. Run the tool (select one or more steps accordingly):
+9. Run the tool:
    ```
    # Download the data and create the dataset
-   python src/data/make_dataset.py
-
-   # Train the model
-   python src/models/train_model.py
-   
-   # Make predictions
-   python src/models/predict_model.py
+   python src/run.py
    ```
 
 ## Supported websites
