@@ -22,7 +22,7 @@ Note that this code is provided free of charge as is. For any bugs, see the issu
 ## Setup and Use
 To use the tool, follow these steps:
 
-1. Ensure you have Python 3.10 and pip installed on your system.
+1. Ensure you have Python 3.9 and pip installed on your system.
 2. Clone the repository to your local machine:
    ```shell
    git clone https://github.com/matteorosato/house-finder.git
