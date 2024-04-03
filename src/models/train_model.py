@@ -18,6 +18,13 @@ AVAILABLE_MODELS = {
 class ModelTrainer:
 
     def __init__(self, model_name: str, target_name: str = 'price'):
+        """
+        Initialize a ModelTrainer object.
+
+        Args:
+            model_name (str): The name of the model to be trained.
+            target_name (str): The name of the target variable to be predicted.
+        """
         if model_name not in AVAILABLE_MODELS.keys():
             raise ValueError(f'model_name must be one of {list(AVAILABLE_MODELS.keys())}')
         self.model_name = model_name

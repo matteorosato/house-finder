@@ -23,10 +23,18 @@ class Datasource:
     api_key = None
     secret = None
 
-    def __init__(self, name: str, config_filepath: Union[str, pathlib.Path], max_pages: int = 2):
+    def __init__(self, name: str, config_filepath: Union[str, pathlib.Path], max_pages: int = 10):
+        """
+        Initialize the Datasource object
+
+        Args:
+            name (str): The name of the object.
+            config_filepath (Union[str, pathlib.Path]): The filepath of the configuration file.
+            max_pages (int): The maximum number of pages of ads to be requested (for each request)
+        """
         self.name = name
         self.config_filepath = config_filepath
-        self.max_pages = max_pages  # limit of the ads pages to be requested
+        self.max_pages = max_pages
         self.filtered_params = self.parse_filter_params(
             params_dict=self.read_toml_config(file_path=self.config_filepath))
 
@@ -75,18 +83,19 @@ class Datasource:
     def clean_dataset(self, df) -> pd.DataFrame:
         pass
 
-    @staticmethod
-    def create_train_test_df(df: pd.DataFrame, test_size: float = 0.2) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    def create_train_test_df(self, df: pd.DataFrame, test_size: float = 0.2) -> Tuple[pd.DataFrame, pd.DataFrame]:
         df_train, df_test = train_test_split(df, test_size=test_size, random_state=11, shuffle=True)
+
+        # print summary info
+        self.logger.info(f'Total items in the training dataset: {len(df_train)}')
+        self.logger.info(f'Total items in the test dataset: {len(df_test)}')
+
         return df_train, df_test
 
 
 class Idealista(Datasource):
     api_key: str = os.environ['IDEALISTA_API_KEY']
     secret: str = os.environ['IDEALISTA_SECRET']
-
-    def __init__(self, name: str, config_filepath: str):
-        super().__init__(name, config_filepath)
 
     def define_search_url(self) -> str:
         country = self.filtered_params['country']
@@ -230,7 +239,7 @@ def main():
     logging.basicConfig(level=logging.INFO, format=log_fmt)
     logger = logging.getLogger(__name__)
 
-    idealista = Idealista(name='Idealista', config_filepath=PROJECT_DIR.joinpath('config.toml'))
+    idealista = Idealista(name='Idealista', config_filepath=PROJECT_DIR.joinpath('config.toml'), max_pages=10)
     logger.info(f'Getting results from {idealista.name} website')
     results = idealista.get_results()
     logger.info(f'Exporting results from {idealista.name} website')

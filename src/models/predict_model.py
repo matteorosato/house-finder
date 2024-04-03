@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
+import pathlib
 import pickle
 import time
 from pathlib import Path
 import pandas as pd
-from typing import Dict
+from typing import Dict, Union
 from sklearn.metrics import mean_absolute_percentage_error, mean_absolute_error, r2_score
 from sklearn.metrics import mean_squared_error
 from src.constants import PROCESSED_DIR, MODELS_DIR, RESULTS_DIR
@@ -13,7 +14,13 @@ from src.constants import PROCESSED_DIR, MODELS_DIR, RESULTS_DIR
 
 class Predictor:
 
-    def __init__(self, model_filepath: Path):
+    def __init__(self, model_filepath: Union[str, pathlib.Path]):
+        """
+        Initialize the Predictor object
+
+        Args:
+            model_filepath (Union[str, pathlib.Path]): The filepath of the trained model.
+        """
         self.model_filepath = model_filepath
         self.model_name = self.get_model_name(self.model_filepath)
         self.model = self.load_model(self.model_filepath)
@@ -50,7 +57,7 @@ class Predictor:
         predictions_df['price_diff'] = predictions_df['predicted_price'] - predictions_df['price']
 
         # add info about prices removing unneeded items (inner join)
-        df = df.join(predictions_df, how='inner').sort_values(by='price_diff', ascending=True)
+        df = df.join(predictions_df, how='inner').sort_values(by='price_diff', ascending=False)
 
         return df
 
