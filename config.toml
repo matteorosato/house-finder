@@ -5,8 +5,8 @@
 country = "it"  # Country code for the website (required) [string]
 operation = "sale"  # Type of operation (required) [string]
 propertyType = "homes"  # Type of property (required) [string]
-center = "40.353,18.174"  # Geographic coordinates for search center (WGS84) (latitude, longitude) [string]
-distance = 4000  # Distance to center, in meters (ratio) [integer]. Check also https://www.calcmaps.com/map-radius/
+center = "40.36826,18.16143"  # Geographic coordinates for search center (WGS84) (latitude, longitude) [string]
+distance = 5800  # Distance to center, in meters (ratio) [integer]. Check also https://www.calcmaps.com/map-radius/
 locale = "it"  # Search language for summary [string]
 locationId = ""  # Idealista location code [string]
 maxItems = 50  # Items per page (maximum allowed: 50) [integer]
