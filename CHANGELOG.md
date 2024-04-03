@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 (2024-03-26)
+## 0.1.0 (2024-04-01)
 #### New Features
 
 * defined project structure
